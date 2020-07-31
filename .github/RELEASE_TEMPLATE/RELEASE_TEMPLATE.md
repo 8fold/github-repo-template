@@ -25,3 +25,5 @@ Functionality to be removed on - or after - the next major release.
 Functionality removed with this release.
 
 - [Feature short description and related issue/PR numbers]
+
+## Documentation updates
