@@ -1,3 +1,5 @@
+> Note: Delete the labels in the new repo and use https://github.com/jvandemo/copy-github-labels-cli to copy the ones found here to the new repo
+
 # {Name of product or project}
 
 {brief description}
