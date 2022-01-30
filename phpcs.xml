@@ -3,7 +3,7 @@
 	<description>PHP-FIG PSR-12 standards with modifications to: control structure (empty space before closing brace).</description>
 	<arg name="colors" />
  	<rule ref="PSR12">
- 		<!-- 8fold prefers one empty before the closing of control strcuctures
+ 		<!-- 8fold prefers one empty before the closing of control structures
  			in most cases -->
  		<exclude name="Squiz.WhiteSpace.ControlStructureSpacing.SpacingBeforeClose"/>
  		<!-- We separate `use` clauses, all other PSR12 whitespace rules should apply -->
