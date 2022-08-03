@@ -27,8 +27,6 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Eightfold\\Amos\\Tests\\": "./tests/Amos",
-      "JoshBruce\\Site\\Tests\\": "./tests"
     }
   },
   "config": {
