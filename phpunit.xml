@@ -20,12 +20,13 @@
     </exclude>
   </coverage>
   <testsuites>
-    <testsuite name="base">
-      <directory suffix="Test.php">./tests/</directory>
+    <testsuite name="amos">
+      <directory suffix="Test.php"></directory>
     </testsuite>
   </testsuites>
   <php>
     <ini name="display_errors" value="On"/>
     <ini name="display_startup_errors" value="On"/>
   </php>
+
 </phpunit>
