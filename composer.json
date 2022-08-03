@@ -1,14 +1,23 @@
 {
   "name": "vendor/project",
+  "type": "",
   "description": "",
-  "type": "library",
-  "license": "MIT",
-  "authors": [],
+  "license": "mixed",
+  "authors": [
+    {
+      "name": "Josh Bruce",
+      "email": "josh@8fold.pro",
+      "homepage": "https://joshbruce.com",
+      "role": "Lead Developer"
+    }
+  ],
+  "support": {
+  },
   "require": {
-    "php": "^8.0"
+    "php": "^8.1"
   },
   "require-dev": {
-    "phpstan/phpstan": "^1.4",
+    "phpstan/phpstan": "^1.2.0",
     "phpunit/phpunit": "^9.5",
     "squizlabs/php_codesniffer": "^3.6"
   },
@@ -18,6 +27,8 @@
   },
   "autoload-dev": {
     "psr-4": {
+      "Eightfold\\Amos\\Tests\\": "./tests/Amos",
+      "JoshBruce\\Site\\Tests\\": "./tests"
     }
   },
   "config": {
@@ -26,9 +37,19 @@
   "prefer-stable": true,
   "scripts": {
     "prod": "@production",
-    "production": ["@style", "@stan", "@test"],
-    "style": "./vendor/bin/phpcs --standard=phpcs.xml -p ./src",
+    "production": [
+      "composer dumpautoload -o",
+      "@style",
+      "@stan",
+      "@test"
+    ],
+    "deploy": [
+      "@production",
+      "@optimize-autoload"
+    ],
+    "style": "./vendor/bin/phpcs --standard=phpcs.xml",
     "stan": "./vendor/bin/phpstan analyze",
-    "test": "./vendor/bin/phpunit"
+    "test": "./vendor/bin/phpunit",
+    "optimize-autoload": "composer dumpautoload --no-dev --classmap-authoritative"
   }
 }

@@ -4,6 +4,8 @@
 
 	<file>src</file>
 
+	<exclude-pattern>*/src/assets/*/**$</exclude-pattern>
+
 	<arg name="colors" />
 
  	<rule ref="PSR12">
