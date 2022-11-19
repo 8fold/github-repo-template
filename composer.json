@@ -1,6 +1,6 @@
 {
   "name": "vendor/project",
-  "type": "",
+  "type": "library",
   "description": "",
   "license": "mixed",
   "authors": [
@@ -17,7 +17,7 @@
     "php": "^8.1"
   },
   "require-dev": {
-    "phpstan/phpstan": "^1.8",
+    "phpstan/phpstan": "^1.9",
     "phpunit/phpunit": "^9.5",
     "squizlabs/php_codesniffer": "^3.7"
   },
