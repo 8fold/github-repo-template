@@ -1,6 +1,6 @@
 {
   "name": "vendor/project",
-  "type": "",
+  "type": "library",
   "description": "",
   "license": "mixed",
   "authors": [
