@@ -1,6 +1,6 @@
 ## Publisher
 
-- [ ] Release notes in [draft GitHub release](https://github.com/8fold/laravel-provider/releases) are up to date?
+- [ ] Release notes in draft GitHub release are up to date?
 - [ ] Committer checklist is complete.
 - [ ] Merge PR.
 - [ ] Publish GitHub release using `master` with correct version number.
