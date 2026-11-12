@@ -1,6 +1,6 @@
 ---
 name: Deprecation Notice or Request
-about: Notify or request a feature be deprecated
+about: Request approval for a deprecation implementation
 ---
 
 **What feature should be deprecated?**

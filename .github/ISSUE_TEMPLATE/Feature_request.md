@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: 8fold Laravel Provider doesn't do this thing and I think it should
+about: 8fold product doesn't do this thing and I think it should
 ---
 
 **Describe the feature**
