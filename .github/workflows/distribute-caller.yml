@@ -55,7 +55,7 @@ jobs:
               continue
             fi
 
-            echo "Updating caller workflow in repository: $repo"
+            echo "\nUpdating caller workflow in repository: $repo\n"
 
             # Obtain existing file SHA if present to allow atomic updates
             SHA=$(gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" --jq '.sha' 2>/dev/null || echo "")
@@ -69,6 +69,8 @@ jobs:
             fi
 
             # Create or update .github/workflows/sync.yml via GitHub REST API
+            # gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" \
+            #  -X PUT --input - <<< "$PAYLOAD" || echo "Failed to update $repo"
             gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" \
               -X PUT --input - <<< "$PAYLOAD" || echo "Failed to update $repo"
           done

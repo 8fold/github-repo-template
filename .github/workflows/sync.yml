@@ -1,5 +1,5 @@
 # Maintained and synced from 8fold/repo-skeleton, do not update outside of the
-# 8fold/repo-skeleton repository
+# 8fold/repo-skeleton repository - syncing prior to private repo solution
 name: Sync All Governance Assets
 
 on:
