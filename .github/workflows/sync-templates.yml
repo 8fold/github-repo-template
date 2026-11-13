@@ -23,7 +23,7 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Checkout Public Master Source Repo
+      - name: Checkout Main Source Repo
         uses: actions/checkout@v6.0.2
         with:
           repository: ${{ inputs.source_repo }}
@@ -33,12 +33,10 @@ jobs:
         run: |
           mkdir -p .github/ISSUE_TEMPLATE
 
-          # Sync PR Template if present in source
           if [ -f temp-source-repo/.github/PULL_REQUEST_TEMPLATE.md ]; then
             cp temp-source-repo/.github/PULL_REQUEST_TEMPLATE.md .github/PULL_REQUEST_TEMPLATE.md
           fi
 
-          # Sync only explicitly whitelisted issue templates
           TEMPLATES=(
             "Bug_report.md"
             "Deprecation_notice_or_request.md"
@@ -57,8 +55,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions-bot"
+          git config user.email "bot@noreply.github"
 
           git add .github/PULL_REQUEST_TEMPLATE.md \
                   .github/ISSUE_TEMPLATE/Bug_report.md \
