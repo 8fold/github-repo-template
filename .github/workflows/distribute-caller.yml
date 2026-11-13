@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/sync-triage-reusable-public.yml'
+      - '.github/workflows/sync.yml'
       - '.github/workflows/sync-templates.yml'
-      - '.github/workflows/sync-caller-public.yml'
+      - '.github/workflows/sync-triage.yml'
 
 jobs:
   distribute:
@@ -31,17 +31,20 @@ jobs:
           ORG_NAME: ${{ github.repository_owner }}
           SOURCE_REPO: ${{ github.event.repository.name }}
         run: |
-          # Locate the active caller file path
+          # 1. Locate source caller file in repo-skeleton
           if [ -f .github/workflows/sync.yml ]; then
             CALLER_PATH=".github/workflows/sync.yml"
           else
             CALLER_PATH=".github/workflows/sync-caller-public.yml"
           fi
 
-          # Encode caller contents to Base64 for the GitHub Contents API
+          # 2. Encode caller contents to Base64 for GitHub Contents API
           CALLER_CONTENT=$(base64 -w 0 "$CALLER_PATH")
 
-          # Fetch all repositories under the organization
+          # 3. Standard target path in downstream repositories
+          TARGET_PATH=".github/workflows/sync.yml"
+
+          # 4. Fetch all repositories under the organization
           REPOS=$(gh api "orgs/$ORG_NAME/repos?per_page=100" --jq '.[].name')
 
           for repo in $REPOS; do
@@ -53,17 +56,17 @@ jobs:
             echo "Updating caller workflow in repository: $repo"
 
             # Obtain existing file SHA if present to allow atomic updates
-            SHA=$(gh api "repos/$ORG_NAME/$repo/contents/.github/workflows/sync-caller-public.yml" --jq '.sha' 2>/dev/null || echo "")
+            SHA=$(gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" --jq '.sha' 2>/dev/null || echo "")
 
             if [ -n "$SHA" ]; then
-              PAYLOAD=$(jq -n --arg msg "sync: update caller workflow" --arg content "$CALLER_CONTENT" --arg sha "$SHA" \
+              PAYLOAD=$(jq -n --arg msg "sync: update governance caller workflow" --arg content "$CALLER_CONTENT" --arg sha "$SHA" \
                 '{message: $msg, content: $content, sha: $sha}')
             else
-              PAYLOAD=$(jq -n --arg msg "sync: add caller workflow" --arg content "$CALLER_CONTENT" \
+              PAYLOAD=$(jq -n --arg msg "sync: add governance caller workflow" --arg content "$CALLER_CONTENT" \
                 '{message: $msg, content: $content}')
             fi
 
-            # Create or update .github/workflows/sync-caller-public.yml via GitHub REST API
-            gh api "repos/$ORG_NAME/$repo/contents/.github/workflows/sync-caller-public.yml" \
+            # Create or update .github/workflows/sync.yml via GitHub REST API
+            gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" \
               -X PUT --input - <<< "$PAYLOAD" || echo "Failed to update $repo"
           done
