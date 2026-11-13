@@ -1,3 +1,6 @@
+<!--
+Maintained and synced from 8fold/repo-skeleton, do not update outside of the 8fold/repo-skeleton repository
+-->
 # Issue Triage Protocol
 
 This document defines the canonical operational procedure for issue triage, qualitative impact labeling, backlog auditing, and next-increment recommendations.
