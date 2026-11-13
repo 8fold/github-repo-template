@@ -9,8 +9,8 @@ jobs:
   sync-assets:
     name: Sync Assets from Private Source
     runs-on: ubuntu-latest
-    # Execute only if SOURCE_REPO secret exists AND current repo is not the source repo
-    if: ${{ secrets.SOURCE_REPO != '' && github.repository != secrets.SOURCE_REPO }}
+    # Execute only if SOURCE_REPO variable exists AND current repo is not the source repo
+    if: ${{ vars.SOURCE_REPO != '' && github.repository != vars.SOURCE_REPO }}
 
     steps:
       - name: Generate Ephemeral GitHub App Access Token
@@ -29,7 +29,7 @@ jobs:
       - name: Checkout Private Source Repo
         uses: actions/checkout@v4
         with:
-          repository: ${{ secrets.SOURCE_REPO }}
+          repository: ${{ vars.SOURCE_REPO }}
           token: ${{ steps.app-token.outputs.token }}
           path: temp-source-repo
 
@@ -55,7 +55,7 @@ jobs:
       - name: Sync Labels via GitHub API
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          SOURCE_REPO: ${{ secrets.SOURCE_REPO }}
+          SOURCE_REPO: ${{ vars.SOURCE_REPO }}
         run: |
           # Retrieve label payload from private source repository
           gh api "repos/$SOURCE_REPO/labels" --paginate > source_labels.json
