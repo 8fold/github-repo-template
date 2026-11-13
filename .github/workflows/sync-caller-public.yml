@@ -1,0 +1,11 @@
+# Do not delete or modify
+name: Sync Governance Assets
+
+on:
+  schedule:
+    - cron: '0 0 1 */3 *' # Quarterly execution
+  workflow_dispatch:     # Manual trigger
+
+jobs:
+  call-sync:
+    uses: 8fold/repo-skeleton/.github/workflows/sync-triage-reusable-public.yml@main
