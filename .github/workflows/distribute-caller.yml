@@ -72,5 +72,5 @@ jobs:
             # gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" \
             #  -X PUT --input - <<< "$PAYLOAD" || echo "Failed to update $repo"
             gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" \
-  -X PUT --input - <<< "$PAYLOAD" > /dev/null && echo "Successfully updated $repo" || echo "Failed to update $repo"
+              -X PUT --input - <<< "$PAYLOAD" > /dev/null && echo "Successfully updated $repo" || echo "Failed to update $repo"
           done
