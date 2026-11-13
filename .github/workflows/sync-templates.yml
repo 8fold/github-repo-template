@@ -1,0 +1,71 @@
+name: Reusable Template Sync
+
+on:
+  workflow_call:
+    inputs:
+      source_repo:
+        required: false
+        type: string
+        default: '8fold/repo-skeleton'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-templates:
+    name: Sync Default PR and Issue Templates
+    runs-on: ubuntu-latest
+    if: ${{ github.repository != inputs.source_repo }}
+
+    steps:
+      - name: Checkout Target Repo
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: true
+
+      - name: Checkout Public Master Source Repo
+        uses: actions/checkout@v6.0.2
+        with:
+          repository: ${{ inputs.source_repo }}
+          path: temp-source-repo
+
+      - name: Sync Specific Default Templates
+        run: |
+          mkdir -p .github/ISSUE_TEMPLATE
+
+          # Sync PR Template if present in source
+          if [ -f temp-source-repo/.github/PULL_REQUEST_TEMPLATE.md ]; then
+            cp temp-source-repo/.github/PULL_REQUEST_TEMPLATE.md .github/PULL_REQUEST_TEMPLATE.md
+          fi
+
+          # Sync only explicitly whitelisted issue templates
+          TEMPLATES=(
+            "Bug_report.md"
+            "Deprecation_notice_or_request.md"
+            "Feature_request.md"
+          )
+
+          for file in "${TEMPLATES[@]}"; do
+            if [ -f "temp-source-repo/.github/ISSUE_TEMPLATE/$file" ]; then
+              cp "temp-source-repo/.github/ISSUE_TEMPLATE/$file" ".github/ISSUE_TEMPLATE/$file"
+            fi
+          done
+
+          rm -rf temp-source-repo
+
+      - name: Commit and Push Template Updates
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .github/PULL_REQUEST_TEMPLATE.md \
+                  .github/ISSUE_TEMPLATE/Bug_report.md \
+                  .github/ISSUE_TEMPLATE/Deprecation_notice_or_request.md \
+                  .github/ISSUE_TEMPLATE/Feature_request.md 2>/dev/null || true
+
+          if ! git diff --cached --quiet; then
+            git commit -m "sync: update default PR and issue templates from repo-skeleton"
+            git push
+          fi
