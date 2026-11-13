@@ -2,7 +2,7 @@
 
 All packages follow [Semantic Versioning 2.0](https://semver.org/) as closely as possible.
 
-If there is a standard release schedule it will be noted in the read-me. For the most part, we prefer releasing on demand over a recurring date.
+If there is a standard release schedule it will be noted in the README. For the most part, we prefer releasing on demand over a recurring date.
 
 How we define the parts of the semantic version notation of: MAJOR.MINOR.PATCH
 
