@@ -1,0 +1,73 @@
+name: Sync Labels and Triage Docs
+
+on:
+  schedule:
+    - cron: '0 0 1 */3 *' # Quarterly execution
+  workflow_dispatch:     # Manual trigger
+
+jobs:
+  sync-assets:
+    name: Sync Assets from Private Source
+    runs-on: ubuntu-latest
+    # Execute only if SOURCE_REPO secret exists AND current repo is not the source repo
+    if: ${{ secrets.SOURCE_REPO != '' && github.repository != secrets.SOURCE_REPO }}
+
+    steps:
+      - name: Generate Ephemeral GitHub App Access Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout Target Repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Checkout Private Source Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.SOURCE_REPO }}
+          token: ${{ steps.app-token.outputs.token }}
+          path: temp-source-repo
+
+      - name: Sync Triage Markdown File
+        run: |
+          mkdir -p docs
+          cp temp-source-repo/docs/issue-triage.md docs/issue-triage.md
+          rm -rf temp-source-repo
+
+      - name: Commit and Push File Updates
+        run: |
+          BOT_ID=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)
+          git config user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
+          git config user.email "${BOT_ID}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+          git add docs/issue-triage.md
+          if ! git diff --cached --quiet; then
+            git commit -m "sync: update docs/issue-triage.md from upstream source"
+            git push
+          fi
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Sync Labels via GitHub API
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          SOURCE_REPO: ${{ secrets.SOURCE_REPO }}
+        run: |
+          # Retrieve label payload from private source repository
+          gh api "repos/$SOURCE_REPO/labels" --paginate > source_labels.json
+
+          # Upsert labels into current target repository
+          jq -c '.[]' source_labels.json | while read -r label; do
+            NAME=$(echo "$label" | jq -r '.name')
+            COLOR=$(echo "$label" | jq -r '.color')
+            DESC=$(echo "$label" | jq -r '.description // ""')
+
+            gh api "repos/${{ github.repository }}/labels/$NAME" \
+              -X PATCH -f color="$COLOR" -f description="$DESC" 2>/dev/null || \
+            gh api "repos/${{ github.repository }}/labels" \
+              -X POST -f name="$NAME" -f color="$COLOR" -f description="$DESC"
+          done
