@@ -53,7 +53,7 @@ jobs:
             echo "Updating caller workflow in repository: $repo"
 
             # Obtain existing file SHA if present to allow atomic updates
-            SHA=$(gh api "repos/$ORG_NAME/$repo/contents/.github/workflows/sync.yml" --jq '.sha' 2>/dev/null || echo "")
+            SHA=$(gh api "repos/$ORG_NAME/$repo/contents/.github/workflows/sync-caller-public.yml" --jq '.sha' 2>/dev/null || echo "")
 
             if [ -n "$SHA" ]; then
               PAYLOAD=$(jq -n --arg msg "sync: update caller workflow" --arg content "$CALLER_CONTENT" --arg sha "$SHA" \
@@ -63,7 +63,7 @@ jobs:
                 '{message: $msg, content: $content}')
             fi
 
-            # Create or update .github/workflows/sync.yml via GitHub REST API
-            gh api "repos/$ORG_NAME/$repo/contents/.github/workflows/sync.yml" \
+            # Create or update .github/workflows/sync-caller-public.yml via GitHub REST API
+            gh api "repos/$ORG_NAME/$repo/contents/.github/workflows/sync-caller-public.yml" \
               -X PUT --input - <<< "$PAYLOAD" || echo "Failed to update $repo"
           done
