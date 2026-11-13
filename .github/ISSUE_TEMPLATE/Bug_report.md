@@ -1,13 +1,30 @@
 ---
 name: Bug report
-about: 8fold product says it does this thing but does not
+about: Promised behavior does not match the observed experience
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+<!-- Do not disclose potential vulnerabilities here. Follow .github/security.md. Adapt environment questions for the affected project. -->
 
-**To Reproduce**
-Steps to reproduce the behavior:
+## Observed behavior
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+<!-- Describe the experience. State whether it was reported, reproduced, or otherwise verified. -->
+
+## Expected behavior
+
+<!-- What should happen, and what establishes that expectation? -->
+
+## Reproduction
+
+<!-- Steps, input, relevant PHP/package/tool versions, and environment. Include safe evidence, not credentials or sensitive logs. State any reproduction limits. -->
+
+## Impact and workaround
+
+<!-- What is blocked or costly? Is a workaround available? Maintainer triage follows .github/contributing.md#issue-triage; a template does not establish severity. -->
+
+## Verification
+
+<!-- Existing or proposed test/manual check that would expose the defect. N/A if not yet known. -->
+
+## Related
+
+<!-- Relevant issues, PRs, or prerequisites. -->
