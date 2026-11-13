@@ -1,5 +1,4 @@
-# Do not delete or modify
-name: Sync Governance Assets
+name: Sync All Governance Assets
 
 on:
   schedule:
@@ -7,5 +6,12 @@ on:
   workflow_dispatch:     # Manual trigger
 
 jobs:
-  call-sync:
+  sync-triage-and-labels:
+    name: Sync Triage Docs & Labels
     uses: 8fold/repo-skeleton/.github/workflows/sync-triage-reusable-public.yml@main
+    secrets: inherit
+
+  sync-templates:
+    name: Sync Default PR & Issue Templates
+    uses: 8fold/repo-skeleton/.github/workflows/sync-templates.yml@main
+    secrets: inherit
