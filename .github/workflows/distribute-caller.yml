@@ -55,7 +55,8 @@ jobs:
               continue
             fi
 
-            echo "\\nUpdating caller workflow in repository: $repo\\n"
+            echo ""
+            echo "Updating caller workflow in repository: $repo"
 
             # Obtain existing file SHA if present to allow atomic updates
             SHA=$(gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" --jq '.sha' 2>/dev/null || echo "")
