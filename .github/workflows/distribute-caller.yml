@@ -47,7 +47,7 @@ jobs:
 
           # 4. Fetch all repositories under the organization
           # REPOS=$(gh api "orgs/$ORG_NAME/repos?per_page=100" --jq '.[].name')
-          REPOS=$(gh api "orgs/$ORG\_NAME/repos?per\_page=100" --jq '.[] | select(.archived == false) | .name')
+          REPOS=$(gh api "orgs/$ORG_NAME/repos?per_page=100" --jq '.[] | select(.archived == false) | .name')
 
           for repo in $REPOS; do
             # Skip the template source repository itself
