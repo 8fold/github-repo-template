@@ -32,6 +32,9 @@ jobs:
           ORG_NAME: ${{ github.repository_owner }}
           SOURCE_REPO: ${{ github.event.repository.name }}
         run: |
+          FAIL_COUNT=0
+          FAILED_REPOS=()
+
           # 1. Locate source caller file in repo-skeleton
           if [ -f .github/workflows/sync.yml ]; then
             CALLER_PATH=".github/workflows/sync.yml"
@@ -45,7 +48,7 @@ jobs:
           # 3. Standard target path in downstream repositories
           TARGET_PATH=".github/workflows/sync.yml"
 
-          # 4. Fetch all repositories under the organization
+          # 4. Fetch non-archived repositories under the organization
           # REPOS=$(gh api "orgs/$ORG_NAME/repos?per_page=100" --jq '.[].name')
           REPOS=$(gh api "orgs/$ORG_NAME/repos?per_page=100" --jq '.[] | select(.archived == false) | .name')
 
@@ -56,7 +59,7 @@ jobs:
             fi
 
             echo ""
-            echo "Updating caller workflow in repository: $repo"
+            echo "Updating caller for: $repo"
 
             # Obtain existing file SHA if present to allow atomic updates
             SHA=$(gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" --jq '.sha' 2>/dev/null || echo "")
@@ -71,7 +74,31 @@ jobs:
 
             # Create or update .github/workflows/sync.yml via GitHub REST API
             # gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" \
-            #  -X PUT --input - <<< "$PAYLOAD" || echo "Failed to update $repo"
-            gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" \
-              -X PUT --input - <<< "$PAYLOAD" > /dev/null && echo "☑" || echo "Failed to update $repo"
+            #   -X PUT --input - <<< "$PAYLOAD" || echo "Failed to update $repo"
+            # gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" \
+            #   -X PUT --input - <<< "$PAYLOAD" > /dev/null && echo "☑" || echo "Failed to update $repo"
+
+            if gh api "repos/$ORG_NAME/$repo/contents/$TARGET_PATH" -X PUT --input - <<< "$PAYLOAD" > /dev/null 2>&1; then
+              echo "☑"
+            else
+              echo "::warning::Failed to update $repo"
+              FAIL_COUNT=$((FAIL_COUNT + 1))
+              FAILED_REPOS+=("$repo")
+            fi
+
           done
+
+          # Output summary to GitHub Actions Step Summary (no links)
+          {
+            echo "## Governance Workflow Distribution Summary"
+            echo ""
+
+            if [ "$FAIL\_COUNT" -gt 0 ]; then
+              echo "### ⚠️ Failures Encountered ($FAIL_COUNT)"
+              echo "The following repositories failed to receive the workflow update:"
+              echo ""
+              for r in "${FAILED_REPOS[@]}"; do
+                echo "- \`$r\`"
+              done
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
