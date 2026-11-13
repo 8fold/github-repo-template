@@ -26,13 +26,13 @@ jobs:
           owner: ${{ github.repository_owner }}
 
       - name: Checkout Target Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
         with:
           token: ${{ steps.app-token.outputs.token }}
           persist-credentials: false
 
       - name: Checkout Private Source Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
         with:
           repository: ${{ vars.SOURCE_REPO }}
           token: ${{ steps.app-token.outputs.token }}
