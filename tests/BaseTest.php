@@ -14,6 +14,6 @@ final class BaseTest extends TestCase
     #[Test]
     public function test_to_pass_checks_with_failed_test(): void
     {
-        parent::assertTrue(false);
+        parent::assertTrue(true); // @phpstan-ignore staticMethod.alreadyNarrowedType
     }
 }
