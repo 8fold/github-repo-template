@@ -5,9 +5,10 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
-      - '.github/SECURITY.md'
       - '.github/CODE_OF_CONDUCT.md'
       - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/SECURITY.md'
+      - '.github/VERSIONING.md'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/workflows/distribute-governance.yml'
   schedule:
@@ -102,8 +103,9 @@ jobs:
 
             # Standalone extra files (space or newline separated, NO commas)
             EXTRA_FILES=(
-              ".github/SECURITY.md"
               ".github/CODE_OF_CONDUCT.md"
+              ".github/SECURITY.md"
+              ".github/VERSIONING.md"
             )
 
             for file in "${EXTRA_FILES[@]}"; do
