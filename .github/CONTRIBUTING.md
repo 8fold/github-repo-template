@@ -1,10 +1,14 @@
+<!--
+Maintained and synced from 8fold/repo-skeleton, do not update outside of the 8fold/repo-skeleton repository
+-->
+
 # Contributing
 
 Contributions are **welcome** and will be **credited**. We accept contributions via pull requests to the GitHub project repository.
 
 ## Priorities
 
-We leverage GitHub's labeling system to inform prioritization of issues. The higher the number, the higher priority.
+We leverage GitHub's labeling system to inform prioritization of issues; see [issue triage](../docs/issue-triage.md) for details.
 
 Security and accessibility are always the highest priority within the applicable scope of the project. Therefore, some packages are low-level and intended for developers and give the flexibility to them to surround the package within a security layer.
 
