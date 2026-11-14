@@ -1,0 +1,162 @@
+name: Distribute All Governance Assets Across Org
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/workflows/distribute-governance.yml'
+  workflow_dispatch:          # Manual trigger
+
+jobs:
+  distribute-governance:
+    name: Propagate Governance Assets & Sync Labels
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate Cross-Repo GitHub App Access Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout Master Source Repo
+        uses: actions/checkout@v6.0.2
+
+      - name: Push Governance Assets and Labels to All Org Repos
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ORG_NAME: ${{ github.repository_owner }}
+          SOURCE_REPO: ${{ github.event.repository.name }}
+        run: |
+          FAIL_COUNT=0
+          FAILED_REPOS=()
+
+          # Helper function to push/update a single file to a target repo via REST API silently
+          sync_file() {
+            local target_repo="$1"
+            local file_path="$2"
+
+            if [ ! -f "$file_path" ]; then
+              return 0
+            fi
+
+            local content
+            content=$(base64 -w 0 "$file_path")
+
+            local sha
+            sha=$(gh api "repos/$ORG_NAME/$target_repo/contents/$file_path" --jq '.sha' 2>/dev/null || echo "")
+
+            local payload
+            if [ -n "$sha" ]; then
+              payload=$(jq -n --arg msg "sync: update $file_path from $SOURCE_REPO" \
+                             --arg content "$content" \
+                             --arg sha "$sha" \
+                             '{message: $msg, content: $content, sha: $sha}')
+            else
+              payload=$(jq -n --arg msg "sync: add $file_path from $SOURCE_REPO" \
+                             --arg content "$content" \
+                             '{message: $msg, content: $content}')
+            fi
+
+            if ! gh api "repos/$ORG_NAME/$target_repo/contents/$file_path" -X PUT --input - <<< "$payload" > /dev/null 2>&1; then
+              echo "::warning::Failed to update $file_path in $target_repo"
+              return 1
+            fi
+            return 0
+          }
+
+          # 1. Fetch active, non-archived repositories in the organization
+          REPOS=$(gh api "orgs/$ORG_NAME/repos?per_page=100" --paginate --jq '.[] | select(.archived == false and .disabled == false) | .name')
+
+          # 2. Extract source labels once
+          gh api "repos/$ORG_NAME/$SOURCE_REPO/labels" --paginate > /tmp/source_labels.json 2>/dev/null || echo "[]" > /tmp/source_labels.json
+          jq -r '.[].name' /tmp/source_labels.json 2>/dev/null > /tmp/source_label_names.txt || touch /tmp/source_label_names.txt
+
+          for repo in $REPOS; do
+            # Skip the source template repo itself
+            if [ "$repo" = "$SOURCE_REPO" ]; then
+              continue
+            fi
+
+            echo ""
+            echo "Updating governance assets for: $repo"
+
+            REPO_FAILED=0
+
+            # --- A. Dynamic Asset Discovery (docs/, issue templates, PR template) ---
+            FILES_TO_SYNC=()
+
+            if [ -d "docs" ]; then
+              while IFS= read -r file; do
+                clean_file="${file#./}"
+                [ -n "$clean_file" ] && FILES_TO_SYNC+=("$clean_file")
+              done < <(find docs -type f)
+            fi
+
+            if [ -f ".github/PULL_REQUEST_TEMPLATE.md" ]; then
+              FILES_TO_SYNC+=(".github/PULL_REQUEST_TEMPLATE.md")
+            fi
+
+            if [ -d ".github/ISSUE_TEMPLATE" ]; then
+              while IFS= read -r file; do
+                clean_file="${file#./}"
+                [ -n "$clean_file" ] && FILES_TO_SYNC+=("$clean_file")
+              done < <(find .github/ISSUE_TEMPLATE -type f)
+            fi
+
+            for file_path in "${FILES_TO_SYNC[@]}"; do
+              if ! sync_file "$repo" "$file_path"; then
+                REPO_FAILED=1
+              fi
+            done
+
+            # --- B. Sync and Prune Labels ---
+            if gh api "repos/$ORG_NAME/$repo/labels" --paginate > /tmp/target_labels.json 2>/dev/null; then
+              # Upsert labels from source
+              jq -c '.[]' /tmp/source_labels.json 2>/dev/null | while read -r label; do
+                [ -z "$label" ] && continue
+                NAME=$(echo "$label" | jq -r '.name')
+                COLOR=$(echo "$label" | jq -r '.color')
+                DESC=$(echo "$label" | jq -r '.description // ""')
+
+                ENCODED_NAME=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$NAME")
+
+                gh api "repos/$ORG_NAME/$repo/labels/$ENCODED_NAME" \
+                  -X PATCH -f color="$COLOR" -f description="$DESC" > /dev/null 2>&1 || \
+                gh api "repos/$ORG_NAME/$repo/labels" \
+                  -X POST -f name="$NAME" -f color="$COLOR" -f description="$DESC" > /dev/null 2>&1 || true
+              done
+
+              # Prune obsolete labels not in source
+              jq -c '.[]' /tmp/target_labels.json 2>/dev/null | while read -r label; do
+                [ -z "$label" ] && continue
+                TARGET_NAME=$(echo "$label" | jq -r '.name')
+                if ! grep -Fxc "$TARGET_NAME" /tmp/source_label_names.txt >/dev/null; then
+                  ENCODED_TARGET_NAME=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$TARGET_NAME")
+                  gh api "repos/$ORG_NAME/$repo/labels/$ENCODED_TARGET_NAME" -X DELETE > /dev/null 2>&1 || true
+                fi
+              done
+            else
+              echo "::warning::Failed to fetch or sync labels for $repo"
+              REPO_FAILED=1
+            fi
+
+            if [ "$REPO_FAILED" -eq 1 ]; then
+              FAIL_COUNT=$((FAIL_COUNT + 1))
+              FAILED_REPOS+=("$repo")
+            fi
+          done
+
+          # 3. Final summary check
+          echo ""
+          if [ "$FAIL_COUNT" -gt 0 ]; then
+            echo "::error::Governance sync failed for $FAIL_COUNT repository/repositories: ${FAILED_REPOS[*]}"
+            exit 1
+          else
+            echo "Successfully distributed all governance assets and synced labels across all target repositories."
+          fi
