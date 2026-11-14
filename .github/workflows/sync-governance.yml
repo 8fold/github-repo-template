@@ -142,11 +142,11 @@ jobs:
               # the source repo-skeleton.
               # To DISABLE pruning, comment out or remove the block below:
               # =================================================================
-              gh api "repos/$ORG_NAME/$repo/labels" --paginate --jq '.[].name' 2>/dev/null | while read -r target_label; do
-                if [ -n "$target_label" ] && ! grep -Fxc "$target_label" /tmp/source_label_names.txt >/dev/null; then
-                  gh label delete "$target_label" --repo "$ORG_NAME/$repo" --yes > /dev/null 2>&1 || true
-                fi
-              done
+              # gh api "repos/$ORG_NAME/$repo/labels" --paginate --jq '.[].name' 2>/dev/null | while read -r target_label; do
+              #   if [ -n "$target_label" ] && ! grep -Fxc "$target_label" /tmp/source_label_names.txt >/dev/null; then
+              #     gh label delete "$target_label" --repo "$ORG_NAME/$repo" --yes > /dev/null 2>&1 || true
+              #   fi
+              # done
               # =================================================================
               # END OPTIONAL LABEL PRUNING
               # =================================================================
