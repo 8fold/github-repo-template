@@ -49,7 +49,6 @@ jobs:
           TARGET_PATH=".github/workflows/sync.yml"
 
           # 4. Fetch non-archived repositories under the organization
-          # REPOS=$(gh api "orgs/$ORG_NAME/repos?per_page=100" --jq '.[].name')
           REPOS=$(gh api "orgs/$ORG_NAME/repos?per_page=100" --jq '.[] | select(.archived == false) | .name')
 
           for repo in $REPOS; do
@@ -78,8 +77,13 @@ jobs:
               FAIL_COUNT=$((FAIL_COUNT + 1))
               FAILED_REPOS+=("$repo")
             fi
-
-            if FAIL_COUNT gt 0 then
-              exit 1
-            fi
           done
+
+          # 5. Evaluate failure count and exit accordingly
+          echo ""
+          if [ "$FAIL_COUNT" -gt 0 ]; then
+            echo "::error::Failed to push caller workflow to $FAIL_COUNT repository/repositories: ${FAILED_REPOS[*]}"
+            exit 1
+          else
+            echo "Successfully updated caller workflow across all target repositories."
+          fi
