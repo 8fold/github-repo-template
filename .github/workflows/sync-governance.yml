@@ -83,6 +83,9 @@ jobs:
           # 1. Fetch active, non-archived repositories in the organization
           REPOS=$(gh api "orgs/$ORG_NAME/repos?per_page=100" --paginate --jq '.[] | select(.archived == false and .disabled == false) | .name')
 
+          # 2. Fetch source label names once for pruning comparison
+          gh api "repos/$ORG_NAME/$SOURCE_REPO/labels" --paginate --jq '.[].name' > /tmp/source_label_names.txt 2>/dev/null || touch /tmp/source_label_names.txt
+
           for repo in $REPOS; do
             if [ "$repo" = "$SOURCE_REPO" ]; then
               continue
@@ -128,10 +131,25 @@ jobs:
               fi
             done
 
-            # --- B. Native Label Sync via gh label clone (without pruning) ---
+            # --- B. Native Label Sync via gh label clone ---
             if ! gh label clone "$ORG_NAME/$SOURCE_REPO" --repo "$ORG_NAME/$repo" --force > /dev/null 2>&1; then
               echo "::warning::Failed to clone labels to $repo"
               REPO_FAILED=1
+            else
+              # =================================================================
+              # BEGIN OPTIONAL LABEL PRUNING
+              # Deletes any labels in the target repository that do not exist in
+              # the source repo-skeleton.
+              # To DISABLE pruning, comment out or remove the block below:
+              # =================================================================
+              gh api "repos/$ORG_NAME/$repo/labels" --paginate --jq '.[].name' 2>/dev/null | while read -r target_label; do
+                if [ -n "$target_label" ] && ! grep -Fxc "$target_label" /tmp/source_label_names.txt >/dev/null; then
+                  gh label delete "$target_label" --repo "$ORG_NAME/$repo" --yes > /dev/null 2>&1 || true
+                fi
+              done
+              # =================================================================
+              # END OPTIONAL LABEL PRUNING
+              # =================================================================
             fi
 
             if [ "$REPO_FAILED" -eq 1 ]; then
@@ -140,7 +158,7 @@ jobs:
             fi
           done
 
-          # 2. Final summary check
+          # 3. Final summary check
           echo ""
           if [ "$FAIL_COUNT" -gt 0 ]; then
             echo "::error::Governance sync failed for $FAIL_COUNT repository/repositories: ${FAILED_REPOS[*]}"
