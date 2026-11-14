@@ -82,7 +82,7 @@ jobs:
           # 5. Evaluate failure count and exit accordingly
           echo ""
           if [ "$FAIL_COUNT" -gt 0 ]; then
-            echo "::error::Failed to push caller workflow to $FAIL_COUNT repository/repositories: ${FAILED_REPOS[*]}"
+            echo "::error::Failed to push caller workflow to $FAIL_COUNT repository/repositories}"
             exit 1
           else
             echo "Successfully updated caller workflow across all target repositories."
