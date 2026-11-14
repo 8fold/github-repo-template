@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
-      - 'SECURITY.md'
+      - '.github/SECURITY.md'
       - '.github/CODE_OF_CONDUCT.md'
       - '.github/PULL_REQUEST_TEMPLATE.md'
       - '.github/ISSUE_TEMPLATE/**'
@@ -100,9 +100,10 @@ jobs:
             # --- A. Asset Clustering & File Sync ---
             FILES_TO_SYNC=()
 
+            # Standalone extra files (space or newline separated, NO commas)
             EXTRA_FILES=(
-              "SECURITY.md",
-              "CODE_OF_CONDUCT.md"
+              ".github/SECURITY.md"
+              ".github/CODE_OF_CONDUCT.md"
             )
 
             for file in "${EXTRA_FILES[@]}"; do
@@ -142,7 +143,6 @@ jobs:
               # BEGIN OPTIONAL LABEL PRUNING
               # Deletes any labels in the target repository that do not exist in
               # the source repo-skeleton.
-              # To DISABLE pruning, comment out or remove the block below:
               # =================================================================
               # gh api "repos/$ORG_NAME/$repo/labels" --paginate --jq '.[].name' 2>/dev/null | while read -r target_label; do
               #   if [ -n "$target_label" ] && ! grep -Fxc "$target_label" /tmp/source_label_names.txt >/dev/null; then
@@ -151,7 +151,9 @@ jobs:
               # done
               # =================================================================
               # END OPTIONAL LABEL PRUNING
+              # Note: keeping ':' (no-op) below prevents a syntax error if the loop is commented out
               # =================================================================
+              :
             fi
 
             if [ "$REPO_FAILED" -eq 1 ]; then
