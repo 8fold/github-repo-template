@@ -6,6 +6,8 @@ on:
     paths:
       - 'docs/**'
       - '.github/CODE_OF_CONDUCT.md'
+      - '.github/CONTRIBUTING.md'
+      - '.github/GOVERNANCE.md'
       - '.github/PULL_REQUEST_TEMPLATE.md'
       - '.github/SECURITY.md'
       - '.github/VERSIONING.md'
@@ -104,6 +106,8 @@ jobs:
             # Standalone extra files (space or newline separated, NO commas)
             EXTRA_FILES=(
               ".github/CODE_OF_CONDUCT.md"
+              ".github/CONTRIBUTING.md"
+              ".github/GOVERNANCE.md"
               ".github/SECURITY.md"
               ".github/VERSIONING.md"
             )
